@@ -10,20 +10,21 @@ export default class Script extends Plugin {
         this.mods = mods;
         this.regex = null; // Initialized after options are loaded
         this.words = null; // Initialized in async prestart
-    	console.log("reached end of constructor!");
     }
 
     async prestart() {
-    	console.log("reached start of prestart!");
         this.words = await fetch("/assets/mods/Word Changer/words.json").then(res=>res.json());
-    	console.log("reached start of prestart! 2");
         for (let word in this.words) {
-        	if (word.stretchable) {
-        		word.regex = new RegExp("^" + word.string + "$", "i");
+        	if (this.words[word].stretchable) {
+        		this.words[word].regex = new RegExp("^" + this.words[word].string + "$", "i");
         	}
         }
-    	console.log("reached start of prestart! 3");
-    	console.log(this.words);
+		sc.OPTIONS_DEFINITION['word-changer-nickname'] = {
+			cat: sc.OPTION_CATEGORY.GENERAL,
+			type: 'CHECKBOX',
+			init: false,
+			restart: false,
+    	};
 		for (let word in this.words) {
 	    	sc.OPTIONS_DEFINITION['word-changer-info-' + word] = {
 		        cat: sc.OPTION_CATEGORY.GENERAL,
@@ -53,6 +54,10 @@ export default class Script extends Plugin {
 					a.message.en_US = a.message.en_US.replace(script.regex,
 						(match, offset, string) => rpl.replacer(match, offset, string, script.words));
 				}
+				if (a.person.person != "main.lea" && script.regex && sc.options.values["word-changer-nickname"]) {
+					a.message.en_US = a.message.en_US.replace(/\blea\b/gi,
+						(match, offset, string) => rpl.replacer(match, offset, string, script.words));
+				}
 				this.parent(a);
 			}
 		};
@@ -61,11 +66,13 @@ export default class Script extends Plugin {
 		// I might add them later anyway
 		ig.EVENT_STEP.SHOW_MSG.inject(dialogListener);
 		ig.EVENT_STEP.SHOW_SIDE_MSG.inject(dialogListener);
-    	console.log("reached end of prestart!");
     }
 
     main() {
-    	console.log("reached start of main!");
+    	ig.lang.labels.sc.gui.options['word-changer-nickname'] = {
+			name: "Also replace name",
+			description: "If enabled, how others call you will also be changed."
+		};
     	for (let word in this.words) {
     		let replacement = sc.options.values["word-changer-info-"+word] || word;
 			initReplacement(word, replacement, this.words);
@@ -88,7 +95,6 @@ export default class Script extends Plugin {
     			}
     		}
     	});
-    	console.log("reached end of main!");
     }
 
     updateRegex() {
