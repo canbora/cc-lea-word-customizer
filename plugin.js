@@ -7,83 +7,23 @@ export default class Script extends Plugin {
     constructor(mods) {
         super();
         script = this;
-        this.regex = null;
         this.mods = mods;
-        this.words = {
-			"hi": {
-				replacement: "hi",
-				stretchable: false,
-				active: false
-			},
-			"lea": {
-				replacement: "lea",
-				stretchable: false,
-				active: false
-			},
-			"bye": {
-				replacement: "bye",
-				stretchable: false,
-				active: false
-			},
-			"how": {
-				replacement: "how",
-				stretchable: false,
-				active: false
-			},
-			"why": {
-				string: "why+",
-				regex: /^why+$/i,
-				replacement: "why",
-				replacementParts: ["w", "h", "y"],
-				stretchable: true,
-				active: false
-			},
-			"wait": {
-				string: "wa+it",
-				regex: /^wa+it$/i,
-				replacement: "wait",
-				replacementParts: ["w", "a", "it"],
-				stretchable: true,
-				active: false
-			},
-			"sorry": {
-				replacement: "sorry",
-				stretchable: false,
-				active: false
-			},
-			"meet": {
-				replacement: "meet",
-				stretchable: false,
-				active: false
-			},
-			"thanks": {
-				replacement: "thanks",
-				stretchable: false,
-				active: false
-			},
-			"what": {
-				string: "wha+t",
-			   	regex: /^wha+t$/i,
-			   	replacement: "what",
-				replacementParts: ["wh", "a", "t"],
-				stretchable: true,
-				active: false
-			},
-			"where": {
-				replacement: "where",
-				stretchable: false,
-				active: false
-			},
-			"who": {
-				replacement: "who",
-				stretchable: false,
-				active: false
-			}
-		};
+        this.regex = null; // Initialized after options are loaded
+        this.words = null; // Initialized in async prestart
+    	console.log("reached end of constructor!");
     }
 
-    prestart() {
-
+    async prestart() {
+    	console.log("reached start of prestart!");
+        this.words = await fetch("/assets/mods/Word Changer/words.json").then(res=>res.json());
+    	console.log("reached start of prestart! 2");
+        for (let word in this.words) {
+        	if (word.stretchable) {
+        		word.regex = new RegExp("^" + word.string + "$", "i");
+        	}
+        }
+    	console.log("reached start of prestart! 3");
+    	console.log(this.words);
 		for (let word in this.words) {
 	    	sc.OPTIONS_DEFINITION['word-changer-info-' + word] = {
 		        cat: sc.OPTION_CATEGORY.GENERAL,
@@ -121,9 +61,11 @@ export default class Script extends Plugin {
 		// I might add them later anyway
 		ig.EVENT_STEP.SHOW_MSG.inject(dialogListener);
 		ig.EVENT_STEP.SHOW_SIDE_MSG.inject(dialogListener);
+    	console.log("reached end of prestart!");
     }
 
     main() {
+    	console.log("reached start of main!");
     	for (let word in this.words) {
     		let replacement = sc.options.values["word-changer-info-"+word] || word;
 			initReplacement(word, replacement, this.words);
@@ -146,6 +88,7 @@ export default class Script extends Plugin {
     			}
     		}
     	});
+    	console.log("reached end of main!");
     }
 
     updateRegex() {
@@ -209,11 +152,11 @@ function getReplacement(original, prevReplacement) {
 
 	    var close = function(){
 	        overlay.remove();
-	    }
+	    };
 	    ig.system.addFocusListener(close);
 	    form.find("input[type=text]").focus();
 	}
-};
+}
 
 function updateReplacement(original, replacement) {
 

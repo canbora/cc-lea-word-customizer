@@ -1,0 +1,56 @@
+{
+	"hi": {
+		"replacement": "hi",
+		"stretchable": false
+	},
+	"lea": {
+		"replacement": "lea",
+		"stretchable": false
+	},
+	"bye": {
+		"replacement": "bye",
+		"stretchable": false
+	},
+	"how": {
+		"replacement": "how",
+		"stretchable": false
+	},
+	"why": {
+		"string": "why+",
+		"replacement": "why",
+		"replacementParts": ["w", "h", "y"],
+		"stretchable": true
+	},
+	"wait": {
+		"string": "wa+it",
+		"replacement": "wait",
+		"replacementParts": ["w", "a", "it"],
+		"stretchable": true
+	},
+	"sorry": {
+		"replacement": "sorry",
+		"stretchable": false
+	},
+	"meet": {
+		"replacement": "meet",
+		"stretchable": false
+	},
+	"thanks": {
+		"replacement": "thanks",
+		"stretchable": false
+	},
+	"what": {
+		"string": "wha+t",
+	   	"replacement": "what",
+		"replacementParts": ["wh", "a", "t"],
+		"stretchable": true
+	},
+	"where": {
+		"replacement": "where",
+		"stretchable": false
+	},
+	"who": {
+		"replacement": "who",
+		"stretchable": false
+	}
+}
