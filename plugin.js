@@ -10,6 +10,16 @@ export default class Script extends Plugin {
         this.mods = mods;
         this.regex = null; // Initialized after options are loaded
         this.words = null; // Initialized in async prestart
+        this.optionsLoaded = false;
+        /*
+        I need to know some options to decide how to change messages, and
+        it just so happens that some messages are loaded before the options.
+        These messages are pushed into this queue and are initialized
+        after the options have been loaded.
+        An alternative to this approach would be to save the options in dome config file
+        in the mod folder but I decided the first approach would be less problematic.
+        */
+        this.messageQueue = [];
     }
 
     async prestart() {
@@ -39,44 +49,31 @@ export default class Script extends Plugin {
 	    	};
 		}
 
-		var dialogListener = {
-			init: function(a) {
-
-				// If script.regex has not been loaded, try to load it
-				// It could not have been loaded in prestart because sc.options is not defined there
-				if (!script.regex && sc.options) {
-					for (let word in script.words) {
-			    		script.words[word].active = sc.options.values["word-changer-toggle-"+word];
-			    	}
-				    script.updateRegex();
-				}
-				if (a.person.person == "main.lea" && script.regex) {
-					a.message.en_US = a.message.en_US.replace(script.regex,
-						(match, offset, string) => rpl.replacer(match, offset, string, script.words));
-				}
-				if (a.person.person != "main.lea" && script.regex && sc.options.values["word-changer-nickname"]) {
-					a.message.en_US = a.message.en_US.replace(/\blea\b/gi,
-						(match, offset, string) => rpl.replacer(match, offset, string, script.words));
-				}
-				this.parent(a);
-			}
-		};
-
 		// SHOW_OFFSCREEN_MSG and SHOW_DREAM_MSG are afaik not used by Lea
 		// I might add them later anyway
-		ig.EVENT_STEP.SHOW_MSG.inject(dialogListener);
-		ig.EVENT_STEP.SHOW_SIDE_MSG.inject(dialogListener);
+		ig.EVENT_STEP.SHOW_MSG.inject({init: dialogueInit});
+		ig.EVENT_STEP.SHOW_SIDE_MSG.inject({init: dialogueInit});
     }
 
     main() {
+
+    	for (let word in this.words) {
+    		this.words[word].active = sc.options.values["word-changer-toggle-"+word];
+    		let replacement = sc.options.values["word-changer-info-"+word] || word;
+			initReplacement(word, replacement);
+    	}
+	    this.updateRegex();
+	    this.optionsLoaded = true;
+	    for (let arr of this.messageQueue) {
+	    	dialogueInit(arr[0], arr[1]); // initializes the messages
+	    }
+	    this.messageQueue = null;
+
     	ig.lang.labels.sc.gui.options['word-changer-nickname'] = {
 			name: "Also replace name",
 			description: "If enabled, how others call you will also be changed."
 		};
-    	for (let word in this.words) {
-    		let replacement = sc.options.values["word-changer-info-"+word] || word;
-			initReplacement(word, replacement, this.words);
-	    }
+
     	sc.Model.addObserver(sc.options, {
     		modelChanged: function() {
     			var words = script.words;
@@ -116,6 +113,24 @@ export default class Script extends Plugin {
     	result = result.substring(0, result.length - 1) + ")";
     	this.regex = new RegExp(result, "gi");
     }
+}
+
+function dialogueInit(a, parent) {
+	if (!parent) {
+		parent = this.parent.bind(this);
+	}
+	if (!script.optionsLoaded) {
+		script.messageQueue.push([a, parent]);
+		return;
+	}
+	if (a.person.person == "main.lea") {
+		a.message.en_US = a.message.en_US.replace(script.regex,
+			(match, offset, string) => rpl.replacer(match, offset, string, script.words));
+	} else if (sc.options.values["word-changer-nickname"]) {
+		a.message.en_US = a.message.en_US.replace(/\blea\b/gi,
+			(match, offset, string) => rpl.replacer(match, offset, string, script.words));
+	}
+	parent(a);
 }
 
 function initReplacement(original, replacement) {
