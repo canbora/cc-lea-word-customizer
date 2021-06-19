@@ -53,6 +53,12 @@ export default class Script extends Plugin {
 		// I might add them later anyway
 		ig.EVENT_STEP.SHOW_MSG.inject({init: dialogueInit});
 		ig.EVENT_STEP.SHOW_SIDE_MSG.inject({init: dialogueInit});
+		ig.EVENT_STEP.SHOW_GET_MSG.inject({
+			init: function(a) {
+				this.parent(a);
+				this.text = replace(this.text);
+			}
+		});
     }
 
     main() {
