@@ -115,6 +115,14 @@ export default class Script extends Plugin {
     }
 }
 
+function replace(string, regex) {
+	if (!regex) {
+		regex = script.regex;
+	}
+	return string.replace(regex,
+			(match, offset, string) => rpl.replacer(match, offset, string, script.words));
+}
+
 function dialogueInit(a, parent) {
 	if (!parent) {
 		parent = this.parent.bind(this);
@@ -124,11 +132,9 @@ function dialogueInit(a, parent) {
 		return;
 	}
 	if (a.person.person == "main.lea") {
-		a.message.en_US = a.message.en_US.replace(script.regex,
-			(match, offset, string) => rpl.replacer(match, offset, string, script.words));
+		a.message.en_US = replace(a.message.en_US);
 	} else if (sc.options.values["word-changer-nickname"]) {
-		a.message.en_US = a.message.en_US.replace(/\blea\b/gi,
-			(match, offset, string) => rpl.replacer(match, offset, string, script.words));
+		a.message.en_US = replace(a.message.en_US, /\blea\b/gi);
 	}
 	parent(a);
 }
