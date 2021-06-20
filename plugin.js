@@ -59,6 +59,14 @@ export default class Script extends Plugin {
 				this.text = replace(this.text);
 			}
 		});
+		ig.EVENT_STEP.SHOW_CHOICE.inject({
+			init: function(a) {
+				for (let option of a.options) {
+					option.label.en_US = replace(option.label.en_US);
+				}
+				this.parent(a);
+			}
+		})
     }
 
     main() {
