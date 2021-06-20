@@ -29,26 +29,47 @@ export default class Script extends Plugin {
         		this.words[word].regex = new RegExp("^" + this.words[word].string + "$", "i");
         	}
         }
+
+        var maxId = -1;
+		for (let cat in sc.OPTION_CATEGORY) {
+			let id = sc.OPTION_CATEGORY[cat];
+			maxId = (id > maxId) ? id : maxId;
+		}
+		sc.OPTION_CATEGORY.WORD_CHANGER = maxId + 1;
+
 		sc.OPTIONS_DEFINITION['word-changer-nickname'] = {
-			cat: sc.OPTION_CATEGORY.GENERAL,
+			cat: sc.OPTION_CATEGORY.WORD_CHANGER,
 			type: 'CHECKBOX',
 			init: false,
 			restart: false,
     	};
 		for (let word in this.words) {
 	    	sc.OPTIONS_DEFINITION['word-changer-info-' + word] = {
-		        cat: sc.OPTION_CATEGORY.GENERAL,
+		        cat: sc.OPTION_CATEGORY.WORD_CHANGER,
 		        type: "INFO",
 		        data: "options.word-changer-info-" + word + ".description"
 		    };
 			sc.OPTIONS_DEFINITION['word-changer-toggle-' + word] = {
-				cat: sc.OPTION_CATEGORY.GENERAL,
+				cat: sc.OPTION_CATEGORY.WORD_CHANGER,
 				type: 'CHECKBOX',
 				init: false,
 				restart: false,
 	    	};
 		}
-
+		
+		sc.OptionsTabBox.inject({
+			init: function(b) {
+				this.parent(b);
+				var tabNum = 0;
+				for (let ind in this.tabs) {
+					if (this.tabs[ind]) {
+						tabNum++;
+					}
+				}
+				this.tabs["word-changer"] = this._createTabButton("word-changer", tabNum, sc.OPTION_CATEGORY.WORD_CHANGER);
+			}
+		})
+		
 		// SHOW_OFFSCREEN_MSG and SHOW_DREAM_MSG are afaik not used by Lea
 		// I might add them later anyway
 		ig.EVENT_STEP.SHOW_MSG.inject({init: dialogueInit});
@@ -83,10 +104,11 @@ export default class Script extends Plugin {
 	    }
 	    this.messageQueue = null;
 
-    	ig.lang.labels.sc.gui.options['word-changer-nickname'] = {
+    	ig.lang.labels.sc.gui.options["word-changer-nickname"] = {
 			name: "Also replace name",
 			description: "If enabled, how others call you will also be changed."
 		};
+		ig.lang.labels.sc.gui.menu.option["word-changer"] = "Words";
 
     	sc.Model.addObserver(sc.options, {
     		modelChanged: function() {
