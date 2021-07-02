@@ -37,12 +37,6 @@ export default class Script extends Plugin {
 		}
 		sc.OPTION_CATEGORY.WORD_CHANGER = maxId + 1;
 
-		sc.OPTIONS_DEFINITION['word-changer-nickname'] = {
-			cat: sc.OPTION_CATEGORY.WORD_CHANGER,
-			type: 'CHECKBOX',
-			init: false,
-			restart: false,
-    	};
 		for (let word in this.words) {
 	    	sc.OPTIONS_DEFINITION['word-changer-info-' + word] = {
 		        cat: sc.OPTION_CATEGORY.WORD_CHANGER,
@@ -104,10 +98,6 @@ export default class Script extends Plugin {
 	    }
 	    this.messageQueue = null;
 
-    	ig.lang.labels.sc.gui.options["word-changer-nickname"] = {
-			name: "Also replace name",
-			description: "If enabled, how others call you will also be changed."
-		};
 		ig.lang.labels.sc.gui.menu.option["word-changer"] = "Words";
 
     	sc.Model.addObserver(sc.options, {
@@ -169,7 +159,7 @@ function dialogueInit(a, parent) {
 	}
 	if (a.person.person == "main.lea") {
 		a.message.en_US = replace(a.message.en_US);
-	} else if (sc.options.values["word-changer-nickname"]) {
+	} else {
 		a.message.en_US = replace(a.message.en_US, /\blea\b/gi);
 	}
 	parent(a);
@@ -184,14 +174,25 @@ function initReplacement(original, replacement) {
 	let toggletext = 'Replace "' + original + '"';
 	let infotext = 'Current replacement for "' + original + '": ' + replacement;
 
-	ig.lang.labels.sc.gui.options['word-changer-toggle-' + original] = {
-		name: toggletext,
-		description: "Tick to replace this word with another."
-	};
+	if (original != "lea") {
+		ig.lang.labels.sc.gui.options['word-changer-toggle-' + original] = {
+			name: toggletext,
+			description: "Tick to replace this word with another."
+		};
 
-	ig.lang.labels.sc.gui.options['word-changer-info-' + original] = {
-		description: infotext
-	};
+		ig.lang.labels.sc.gui.options['word-changer-info-' + original] = {
+			description: infotext
+		};
+	} else {
+		ig.lang.labels.sc.gui.options['word-changer-toggle-lea'] = {
+			name: "Replace character name",
+			description: "Tick to change the main character's name."
+		};
+
+		ig.lang.labels.sc.gui.options['word-changer-info-lea'] = {
+			description: "Current name: " + replacement + ". This is used by the character as well as others."
+		};
+	}
 }
 
 function getReplacement(original, prevReplacement) {
@@ -222,22 +223,25 @@ function getReplacement(original, prevReplacement) {
 }
 
 function updateReplacement(original, replacement) {
-
 	script.words[original].replacement = replacement;
 	if (script.words[original].stretchable) {
 		script.words[original].replacementParts = rpl.splitReplacement(replacement);
 	}
-
-	var infotext = 'Current replacement for "' + original + '": ' + replacement;
+	var infotext;
+	if (original != "lea") {
+		infotext = 'Current replacement for "' + original + '": ' + replacement;
+    } else {
+    	infotext = "Current name: " + replacement + ". This is used by the character as well as others.";
+    }
+    ig.lang.labels.sc.gui.options['word-changer-info-' + original].description = infotext;
 
 	sc.options.values["word-changer-info-" + original] = replacement;
-	ig.lang.labels.sc.gui.options['word-changer-info-' + original].description = infotext;
 	var options = sc.menu.guiReference.submenus.options.listBox.rows;
 	for (let ind in options) {
 		// The code below relies on the info box being directly above the toggle option.
 		// This has been the only way I've found to find the correct info box.
 		if (options[ind].optionName == "word-changer-toggle-" + original) {
-			options[ind-1].text.setText(infotext);
+            options[ind-1].text.setText(infotext);
             break;
 		}
 	}

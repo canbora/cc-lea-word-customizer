@@ -1,10 +1,10 @@
 {
-	"hi": {
-		"replacement": "hi",
-		"stretchable": false
-	},
 	"lea": {
 		"replacement": "lea",
+		"stretchable": false
+	},
+	"hi": {
+		"replacement": "hi",
 		"stretchable": false
 	},
 	"bye": {
