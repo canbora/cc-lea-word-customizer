@@ -50,6 +50,7 @@ export default class Script extends Plugin {
 				restart: false,
 	    	};
 		}
+		sc.fontsystem.font.setMapping({"word-changer": [0, 58]});
 		
 		sc.OptionsTabBox.inject({
 			init: function(b) {
