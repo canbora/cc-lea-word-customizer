@@ -1,3 +1,4 @@
+/*jshint esversion: 8 */
 import * as rpl from './replacer.js';
 
 var script = null;
@@ -64,9 +65,13 @@ export default class Script extends Plugin {
 				this.tabs["word-changer"] = this._createTabButton("word-changer", tabNum, sc.OPTION_CATEGORY.WORD_CHANGER);
 			}
 		})
-		
-		// SHOW_OFFSCREEN_MSG and SHOW_DREAM_MSG are afaik not used by Lea
-		// I might add them later anyway
+
+		ig.LangLabel.inject({
+			init: function(a) {
+				a.en_US = replace(a.en_US, /\blea\b/gi, {"lea": script.words.lea});
+				this.parent(a);
+			}
+		});
 		ig.EVENT_STEP.SHOW_MSG.inject({init: dialogueInit});
 		ig.EVENT_STEP.SHOW_SIDE_MSG.inject({init: dialogueInit});
 		ig.EVENT_STEP.SHOW_GET_MSG.inject({
@@ -142,12 +147,15 @@ export default class Script extends Plugin {
     }
 }
 
-function replace(string, regex) {
+function replace(string, regex, words) {
 	if (!regex) {
 		regex = script.regex;
 	}
+	if (!words) {
+		words = script.words;
+	}
 	return string.replace(regex,
-			(match, offset, string) => rpl.replacer(match, offset, string, script.words));
+			(match, offset, string) => rpl.replacer(match, offset, string, words));
 }
 
 function dialogueInit(a, parent) {
@@ -160,8 +168,8 @@ function dialogueInit(a, parent) {
 	}
 	if (a.person.person == "main.lea") {
 		a.message.en_US = replace(a.message.en_US);
-	} else {
-		a.message.en_US = replace(a.message.en_US, /\blea\b/gi);
+	} else if (script.words.lea.active) {
+		a.message.en_US = replace(a.message.en_US, /\blea\b/gi, {"lea": script.words.lea});
 	}
 	parent(a);
 }
@@ -193,6 +201,8 @@ function initReplacement(original, replacement) {
 		ig.lang.labels.sc.gui.options['word-changer-info-lea'] = {
 			description: "Current name: " + replacement + ". This is used by the character as well as others."
 		};
+
+		manuallyReplaceLea();
 	}
 }
 
@@ -233,6 +243,7 @@ function updateReplacement(original, replacement) {
 		infotext = 'Current replacement for "' + original + '": ' + replacement;
     } else {
     	infotext = "Current name: " + replacement + ". This is used by the character as well as others.";
+    	manuallyReplaceLea();
     }
     ig.lang.labels.sc.gui.options['word-changer-info-' + original].description = infotext;
 
@@ -246,4 +257,17 @@ function updateReplacement(original, replacement) {
             break;
 		}
 	}
+}
+
+function manuallyReplaceLea() {
+	var capitalized = script.words.lea.replacement;
+	capitalized = capitalized[0].toUpperCase() + capitalized.substring(1);
+	sc.model.leaConfig.character.data.name.en_US = capitalized;
+	ig.database.data.lore.lea.title.en_US = capitalized;
+	ig.database.data.achievements["landmarks-total-04"].name.en_US = `${capitalized} the Explorer`;
+	ig.database.data.areas["cargo-ship"].landmarks.teleporter.description.en_US = `At the Cargo Hold where ${capitalized} started her journey.`;
+	ig.lang.labels.sc.gui.menu.stats.keys.yawns = `Total Number of Times ${capitalized} was bored`;
+	ig.lang.labels.sc.gui.menu.stats.keys.hiCount = `Total Number of Times ${capitalized} said "${script.words.hi.replacement}"`;
+	ig.lang.labels.sc.gui.menu["help-texts"].map.pages[1].content[2] = `Selecting yes closes the menu and teleports ${capitalized} to the location of the landmark`;
+	ig.lang.labels.sc.gui.menu["help-texts"].lore.pages[1].content[3] = `I added some extra code here for you, ${capitalized}. Next to the in-game categories I added one for your progress and one for characters.`;
 }
