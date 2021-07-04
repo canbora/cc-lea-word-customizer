@@ -76,14 +76,21 @@ export default class Script extends Plugin {
 		ig.EVENT_STEP.SHOW_SIDE_MSG.inject({init: dialogueInit});
 		ig.EVENT_STEP.SHOW_GET_MSG.inject({
 			init: function(a) {
+				if (a.msgType == "WORD") {
+					replace(a.object.en_US);
+				}
 				this.parent(a);
-				this.text = replace(this.text);
 			}
 		});
 		ig.EVENT_STEP.SHOW_CHOICE.inject({
 			init: function(a) {
 				for (let option of a.options) {
-					option.label.en_US = replace(option.label.en_US);
+					try {
+						option.label.en_US = replace(option.label.en_US);
+					} catch (e) {
+						console.log("Option has no english label:");
+						console.log(option);
+					}
 				}
 				this.parent(a);
 			}
@@ -91,7 +98,6 @@ export default class Script extends Plugin {
     }
 
     main() {
-
     	for (let word in this.words) {
     		this.words[word].active = sc.options.values["word-changer-toggle-"+word];
     		let replacement = sc.options.values["word-changer-info-"+word] || word;
@@ -148,6 +154,13 @@ export default class Script extends Plugin {
 }
 
 function replace(string, regex, words) {
+	// I keep track of which strings I have changed with a null character in the end.
+	// I put it in the end to avoid conflict with another mod (uwuifier) that uses this.
+	// Another alternative would be to add a "replaced" field to the parent of the replaced
+	// string, but I feel this method is much simpler.
+	if (string[string.length-1] === '\0') {
+		return string;
+	}
 	if (!regex) {
 		regex = script.regex;
 	}
@@ -155,7 +168,7 @@ function replace(string, regex, words) {
 		words = script.words;
 	}
 	return string.replace(regex,
-			(match, offset, string) => rpl.replacer(match, offset, string, words));
+			(match, offset, string) => rpl.replacer(match, offset, string, words)) + '\0';
 }
 
 function dialogueInit(a, parent) {
