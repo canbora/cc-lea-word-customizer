@@ -68,7 +68,9 @@ export default class Script extends Plugin {
 
 		ig.LangLabel.inject({
 			init: function(a) {
-				a.en_US = replace(a.en_US, /\blea\b/gi, {"lea": script.words.lea});
+				if (a.en_US) {
+					a.en_US = replace(a.en_US, /\blea\b/gi, {"lea": script.words.lea});
+				}
 				this.parent(a);
 			}
 		});
@@ -76,7 +78,7 @@ export default class Script extends Plugin {
 		ig.EVENT_STEP.SHOW_SIDE_MSG.inject({init: dialogueInit});
 		ig.EVENT_STEP.SHOW_GET_MSG.inject({
 			init: function(a) {
-				if (a.msgType == "WORD") {
+				if (a.msgType == "WORD" && a.object.en_US) {
 					replace(a.object.en_US);
 				}
 				this.parent(a);
@@ -85,11 +87,8 @@ export default class Script extends Plugin {
 		ig.EVENT_STEP.SHOW_CHOICE.inject({
 			init: function(a) {
 				for (let option of a.options) {
-					try {
+					if (option.label.en_US) {
 						option.label.en_US = replace(option.label.en_US);
-					} catch (e) {
-						console.log("Option has no english label:");
-						console.log(option);
 					}
 				}
 				this.parent(a);
@@ -158,7 +157,7 @@ function replace(string, regex, words) {
 	// I put it in the end to avoid conflict with another mod (uwuifier) that uses this.
 	// Another alternative would be to add a "replaced" field to the parent of the replaced
 	// string, but I feel this method is much simpler.
-	if (string[string.length-1] === '\0') {
+	if (!string || string[string.length-1] === '\0') {
 		return string;
 	}
 	if (!regex) {
@@ -172,6 +171,9 @@ function replace(string, regex, words) {
 }
 
 function dialogueInit(a, parent) {
+	if (!a.message.en_US) {
+		return this.parent(a);
+	}
 	if (!parent) {
 		parent = this.parent.bind(this);
 	}
