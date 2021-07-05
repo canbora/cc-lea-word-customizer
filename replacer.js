@@ -1,3 +1,5 @@
+/*jshint esversion: 8 */
+
 // This function is used to decide which character to stretch in the replacement word.
 function lastVowelIndex(string) {
 	for (let i = string.length - 1; i >= 0; i--) {
@@ -13,7 +15,7 @@ export function splitReplacement(string) {
 	return [string.substring(0, i), string.charAt(i), string.substring(i+1)];
 }
 
-export function replacer(match, offset, string, wordList) {
+export function replacer(match, wordList) {
 	let result = "error";
 
 	for (const word in wordList) {
@@ -35,7 +37,13 @@ export function replacer(match, offset, string, wordList) {
 	if (match.toUpperCase() == match) { // ALL CAPS
 		result = result.toUpperCase();
 	} else if (match.charAt(0).toUpperCase() == match.charAt(0)) { // Capitalized
-		result = result[0].toUpperCase() + result.substring(1);
+		if (match.toLowerCase() == "lea") {
+			// This is a name, so capitalize every word
+			result = result.replace(/(\b[a-z])/g, (match, letter) => letter.toUpperCase());
+		} else {
+			// Otherwise, capitalize only first word
+			result = result[0].toUpperCase() + result.substring(1);
+		}
 	}
 	return result;
 }

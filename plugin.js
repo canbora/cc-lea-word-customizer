@@ -69,7 +69,7 @@ export default class Script extends Plugin {
 		ig.LangLabel.inject({
 			init: function(a) {
 				if (a.en_US) {
-					a.en_US = replace(a.en_US, /\blea\b/gi, {"lea": script.words.lea});
+					a.en_US = replace(a.en_US, true);
 				}
 				this.parent(a);
 			}
@@ -152,7 +152,7 @@ export default class Script extends Plugin {
     }
 }
 
-function replace(string, regex, words) {
+function replace(string, leaOnly) {
 	// I keep track of which strings I have changed with a null character in the end.
 	// I put it in the end to avoid conflict with another mod (uwuifier) that uses this.
 	// Another alternative would be to add a "replaced" field to the parent of the replaced
@@ -160,14 +160,16 @@ function replace(string, regex, words) {
 	if (!string || string[string.length-1] === '\0') {
 		return string;
 	}
-	if (!regex) {
+	var regex, words;
+	if (leaOnly) {
+		regex = /\blea\b/gi;
+		words = {lea: script.words.lea};
+	} else {
 		regex = script.regex;
-	}
-	if (!words) {
 		words = script.words;
 	}
 	return string.replace(regex,
-			(match, offset, string) => rpl.replacer(match, offset, string, words)) + '\0';
+			(match) => rpl.replacer(match, words)) + '\0';
 }
 
 function dialogueInit(a, parent) {
@@ -187,7 +189,7 @@ function dialogueInit(a, parent) {
 		hiCount = hiMatches ? hiMatches.length : 0;
 		a.message.en_US = replace(a.message.en_US);
 	} else if (script.words.lea.active) {
-		a.message.en_US = replace(a.message.en_US, /\blea\b/gi, {"lea": script.words.lea});
+		a.message.en_US = replace(a.message.en_US, true);
 	}
 	parent(a);
 	if (hiCount !== null) {
