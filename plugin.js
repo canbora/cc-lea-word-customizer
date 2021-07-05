@@ -64,7 +64,7 @@ export default class Script extends Plugin {
 				}
 				this.tabs["word-changer"] = this._createTabButton("word-changer", tabNum, sc.OPTION_CATEGORY.WORD_CHANGER);
 			}
-		})
+		});
 
 		ig.LangLabel.inject({
 			init: function(a) {
@@ -93,7 +93,7 @@ export default class Script extends Plugin {
 				}
 				this.parent(a);
 			}
-		})
+		});
     }
 
     main() {
@@ -171,7 +171,7 @@ function replace(string, regex, words) {
 }
 
 function dialogueInit(a, parent) {
-	if (!a.message.en_US) {
+	if (!a.message || !a.message.en_US) {
 		return this.parent(a);
 	}
 	if (!parent) {
@@ -181,12 +181,18 @@ function dialogueInit(a, parent) {
 		script.messageQueue.push([a, parent]);
 		return;
 	}
+	var hiCount = null;
 	if (a.person.person == "main.lea") {
+		let hiMatches = a.message.en_US.match(/hi[.!?]/gi);
+		hiCount = hiMatches ? hiMatches.length : 0;
 		a.message.en_US = replace(a.message.en_US);
 	} else if (script.words.lea.active) {
 		a.message.en_US = replace(a.message.en_US, /\blea\b/gi, {"lea": script.words.lea});
 	}
 	parent(a);
+	if (hiCount !== null) {
+		a.hiCount = hiCount;
+	}
 }
 
 function initReplacement(original, replacement) {
