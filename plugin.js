@@ -60,6 +60,9 @@ export default class Script extends Plugin {
 
     main() {
     	for (let word in this.words) {
+    		if (!sc.options.values["word-changer-info-"+word]) {
+    			sc.options.values["word-changer-info-"+word] = word;
+    		}
     		this.words[word].active = sc.options.values["word-changer-toggle-"+word];
     		let replacement = sc.options.values["word-changer-info-"+word] || word;
 			this.initReplacement(word, replacement);
@@ -268,8 +271,8 @@ function getReplacement(original, prevReplacement) {
 	    var form = ig.dom.html('<form><input type="text" name="replacement" value="' + prevReplacement + '" /><input type="submit" name="send" value="Submit" /><form>');
 	    overlay.append(form);
 	    form.submit(function(){
-	        let replacement = form[0].replacement.value.toLowerCase() || original;
-	        script.updateReplacement(original, replacement);
+	        let newReplacement = form[0].replacement.value.toLowerCase() || prevReplacement;
+	        script.updateReplacement(original, newReplacement);
 	        ig.system.regainFocus();
 	        return false;
 	    });
