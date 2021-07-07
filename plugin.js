@@ -17,7 +17,8 @@ export default class Script extends Plugin {
         it just so happens that some messages are loaded before the options.
         These messages are pushed into this queue and are initialized
         after the options have been loaded.
-        An alternative to this approach would be to save the options in dome config file
+        The initialization being late doesn't seem to pose a problem for messages.
+        An alternative to this approach would be to save the options in some config file
         in the mod folder but I decided the first approach would be less problematic.
         */
         this.messageQueue = [];
@@ -53,54 +54,15 @@ export default class Script extends Plugin {
 		}
 		sc.fontsystem.font.setMapping({"word-changer": [0, 58]});
 		
-		sc.OptionsTabBox.inject({
-			init: function(b) {
-				this.parent(b);
-				var tabNum = 0;
-				for (let ind in this.tabs) {
-					if (this.tabs[ind]) {
-						tabNum++;
-					}
-				}
-				this.tabs["word-changer"] = this._createTabButton("word-changer", tabNum, sc.OPTION_CATEGORY.WORD_CHANGER);
-			}
-		});
-
-		ig.LangLabel.inject({
-			init: function(a) {
-				if (a.en_US) {
-					a.en_US = replace(a.en_US, true);
-				}
-				this.parent(a);
-			}
-		});
-		ig.EVENT_STEP.SHOW_MSG.inject({init: dialogueInit});
-		ig.EVENT_STEP.SHOW_SIDE_MSG.inject({init: dialogueInit});
-		ig.EVENT_STEP.SHOW_GET_MSG.inject({
-			init: function(a) {
-				if (a.msgType == "WORD" && a.object.en_US) {
-					replace(a.object.en_US);
-				}
-				this.parent(a);
-			}
-		});
-		ig.EVENT_STEP.SHOW_CHOICE.inject({
-			init: function(a) {
-				for (let option of a.options) {
-					if (option.label.en_US) {
-						option.label.en_US = replace(option.label.en_US);
-					}
-				}
-				this.parent(a);
-			}
-		});
+		injectStuff();
+		
     }
 
     main() {
     	for (let word in this.words) {
     		this.words[word].active = sc.options.values["word-changer-toggle-"+word];
     		let replacement = sc.options.values["word-changer-info-"+word] || word;
-			initReplacement(word, replacement);
+			this.initReplacement(word, replacement);
     	}
 	    this.updateRegex();
 	    this.optionsLoaded = true;
@@ -118,7 +80,7 @@ export default class Script extends Plugin {
     				let option = sc.options.values["word-changer-toggle-"+word];
     				if (option && !words[word].active) {
     					words[word].active = true;
-    					if (sc.menu.directMenu == 8) { // if in menu
+    					if (sc.menu.directMenu === 8) { // if in menu
     						getReplacement(word, words[word].replacement, words);
     						script.updateRegex();
     					}
@@ -143,13 +105,115 @@ export default class Script extends Plugin {
     			result += this.words[word].string + "|";
     		}
     	}
-    	if (result == "(?:") {
+    	if (result === "(?:") {
     		this.regex = /(?!)/gi;
     		return;
     	}
     	result = result.substring(0, result.length - 1) + ")";
     	this.regex = new RegExp(result, "gi");
     }
+
+    initReplacement(original, replacement) {
+    	this.words[original].replacement = replacement;
+    	if (this.words[original].stretchable) {
+    		this.words[original].replacementParts = rpl.splitReplacement(replacement);
+    	}
+
+    	let toggletext = 'Replace "' + original + '"';
+    	let infotext = 'Current replacement for "' + original + '": ' + replacement;
+
+    	if (original != "lea") {
+    		ig.lang.labels.sc.gui.options['word-changer-toggle-' + original] = {
+    			name: toggletext,
+    			description: "Tick to replace this word with another."
+    		};
+
+    		ig.lang.labels.sc.gui.options['word-changer-info-' + original] = {
+    			description: infotext
+    		};
+    	} else {
+    		ig.lang.labels.sc.gui.options['word-changer-toggle-lea'] = {
+    			name: "Replace character name",
+    			description: "Tick to change the main character's name."
+    		};
+
+    		ig.lang.labels.sc.gui.options['word-changer-info-lea'] = {
+    			description: "Current name: " + replacement + ". This is used by the character as well as others."
+    		};
+
+    		manuallyReplaceLea();
+    	}
+    }
+
+    updateReplacement(original, replacement) {
+    	this.words[original].replacement = replacement;
+    	if (this.words[original].stretchable) {
+    		this.words[original].replacementParts = rpl.splitReplacement(replacement);
+    	}
+    	var infotext;
+    	if (original != "lea") {
+    		infotext = 'Current replacement for "' + original + '": ' + replacement;
+        } else {
+        	infotext = "Current name: " + replacement + ". This is used by the character as well as others.";
+        	manuallyReplaceLea();
+        }
+        ig.lang.labels.sc.gui.options['word-changer-info-' + original].description = infotext;
+
+    	sc.options.values["word-changer-info-" + original] = replacement;
+    	var options = sc.menu.guiReference.submenus.options.listBox.rows;
+    	for (let ind in options) {
+    		// The code below relies on the info box being directly above the toggle option.
+    		// This has been the only way I've found to find the correct info box.
+    		if (options[ind].optionName === "word-changer-toggle-" + original) {
+                options[ind-1].text.setText(infotext);
+                break;
+    		}
+    	}
+    }
+}
+
+function injectStuff() {
+	sc.OptionsTabBox.inject({
+		init: function(b) {
+			this.parent(b);
+			var tabNum = 0;
+			for (let ind in this.tabs) {
+				if (this.tabs[ind]) {
+					tabNum++;
+				}
+			}
+			this.tabs["word-changer"] = this._createTabButton("word-changer", tabNum, sc.OPTION_CATEGORY.WORD_CHANGER);
+		}
+	});
+
+	ig.LangLabel.inject({
+		init: function(a) {
+			if (a.en_US) {
+				a.en_US = replace(a.en_US, true);
+			}
+			this.parent(a);
+		}
+	});
+	ig.EVENT_STEP.SHOW_MSG.inject({init: dialogueInit});
+	ig.EVENT_STEP.SHOW_SIDE_MSG.inject({init: dialogueInit});
+	ig.EVENT_STEP.SHOW_GET_MSG.inject({
+		init: function(a) {
+			if (a.msgType === "WORD" && a.object.en_US) {
+				replace(a.object.en_US);
+			}
+			this.parent(a);
+		}
+	});
+	ig.EVENT_STEP.SHOW_CHOICE.inject({
+		init: function(a) {
+			for (let option of a.options) {
+				if (option.label.en_US) {
+					option.label.en_US = replace(option.label.en_US);
+				}
+			}
+			this.parent(a);
+		}
+	});
 }
 
 function replace(string, leaOnly) {
@@ -184,7 +248,7 @@ function dialogueInit(a, parent) {
 		return;
 	}
 	var hiCount = null;
-	if (a.person.person == "main.lea") {
+	if (a.person.person === "main.lea") {
 		let hiMatches = a.message.en_US.match(/hi[.!?]/gi);
 		hiCount = hiMatches ? hiMatches.length : 0;
 		a.message.en_US = replace(a.message.en_US);
@@ -197,38 +261,6 @@ function dialogueInit(a, parent) {
 	}
 }
 
-function initReplacement(original, replacement) {
-	script.words[original].replacement = replacement;
-	if (script.words[original].stretchable) {
-		script.words[original].replacementParts = rpl.splitReplacement(replacement);
-	}
-
-	let toggletext = 'Replace "' + original + '"';
-	let infotext = 'Current replacement for "' + original + '": ' + replacement;
-
-	if (original != "lea") {
-		ig.lang.labels.sc.gui.options['word-changer-toggle-' + original] = {
-			name: toggletext,
-			description: "Tick to replace this word with another."
-		};
-
-		ig.lang.labels.sc.gui.options['word-changer-info-' + original] = {
-			description: infotext
-		};
-	} else {
-		ig.lang.labels.sc.gui.options['word-changer-toggle-lea'] = {
-			name: "Replace character name",
-			description: "Tick to change the main character's name."
-		};
-
-		ig.lang.labels.sc.gui.options['word-changer-info-lea'] = {
-			description: "Current name: " + replacement + ". This is used by the character as well as others."
-		};
-
-		manuallyReplaceLea();
-	}
-}
-
 function getReplacement(original, prevReplacement) {
 	if(window.ig && window.ig.system){
 		// I've chosen the gamecodeMessage overlay because it's in the format I want
@@ -237,7 +269,7 @@ function getReplacement(original, prevReplacement) {
 	    overlay.append(form);
 	    form.submit(function(){
 	        let replacement = form[0].replacement.value.toLowerCase() || original;
-	        updateReplacement(original, replacement);
+	        script.updateReplacement(original, replacement);
 	        ig.system.regainFocus();
 	        return false;
 	    });
@@ -253,32 +285,6 @@ function getReplacement(original, prevReplacement) {
 	    };
 	    ig.system.addFocusListener(close);
 	    form.find("input[type=text]").focus();
-	}
-}
-
-function updateReplacement(original, replacement) {
-	script.words[original].replacement = replacement;
-	if (script.words[original].stretchable) {
-		script.words[original].replacementParts = rpl.splitReplacement(replacement);
-	}
-	var infotext;
-	if (original != "lea") {
-		infotext = 'Current replacement for "' + original + '": ' + replacement;
-    } else {
-    	infotext = "Current name: " + replacement + ". This is used by the character as well as others.";
-    	manuallyReplaceLea();
-    }
-    ig.lang.labels.sc.gui.options['word-changer-info-' + original].description = infotext;
-
-	sc.options.values["word-changer-info-" + original] = replacement;
-	var options = sc.menu.guiReference.submenus.options.listBox.rows;
-	for (let ind in options) {
-		// The code below relies on the info box being directly above the toggle option.
-		// This has been the only way I've found to find the correct info box.
-		if (options[ind].optionName == "word-changer-toggle-" + original) {
-            options[ind-1].text.setText(infotext);
-            break;
-		}
 	}
 }
 

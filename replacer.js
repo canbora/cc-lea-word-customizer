@@ -23,7 +23,7 @@ export function replacer(match, wordList) {
 		if (!wordData.active) {
 			continue;
 		}
-		if (!wordData.stretchable && match.toLowerCase() == word) {
+		if (!wordData.stretchable && match.toLowerCase() === word) {
 			result = wordData.replacement;
 			break;
 		}
@@ -34,10 +34,10 @@ export function replacer(match, wordList) {
 			break;
 		}
 	}
-	if (match.toUpperCase() == match) { // ALL CAPS
+	if (match.toUpperCase() === match) { // ALL CAPS
 		result = result.toUpperCase();
-	} else if (match.charAt(0).toUpperCase() == match.charAt(0)) { // Capitalized
-		if (match.toLowerCase() == "lea") {
+	} else if (match.charAt(0).toUpperCase() === match.charAt(0)) { // Capitalized
+		if (match.toLowerCase() === "lea") {
 			// This is a name, so capitalize every word
 			result = result.replace(/(\b[a-z])/g, (match, letter) => letter.toUpperCase());
 		} else {

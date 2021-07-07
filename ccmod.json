@@ -1,8 +1,8 @@
 {
     "id": "word-changer",
-	"version": "0.0.1",
+	"version": "0.1.0",
 	"description": {
-		"en_US": "Lets you change Lea's words with different ones."
+		"en_US": "Lets you customize Lea's name and learned words."
 	},
 	"plugin": "plugin.js",
 	"ccmodDependencies": {}
