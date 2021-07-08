@@ -1,5 +1,6 @@
 /*jshint esversion: 8 */
 import * as rpl from './replacer.js';
+import OptionManager from './options.js';
 
 var script = null;
 
@@ -20,64 +21,17 @@ export default class Script extends Plugin {
         		this.words[word].regex = new RegExp("^" + this.words[word].string + "$", "i");
         	}
         }
-
-        var maxId = -1;
-		for (let cat in sc.OPTION_CATEGORY) {
-			let id = sc.OPTION_CATEGORY[cat];
-			maxId = (id > maxId) ? id : maxId;
-		}
-		sc.OPTION_CATEGORY.WORD_CHANGER = maxId + 1;
-
-		for (let word in this.words) {
-	    	sc.OPTIONS_DEFINITION['word-changer-info-' + word] = {
-		        cat: sc.OPTION_CATEGORY.WORD_CHANGER,
-		        type: "INFO",
-		        data: "options.word-changer-info-" + word + ".description"
-		    };
-			sc.OPTIONS_DEFINITION['word-changer-toggle-' + word] = {
-				cat: sc.OPTION_CATEGORY.WORD_CHANGER,
-				type: 'CHECKBOX',
-				init: false,
-				restart: false,
-	    	};
-		}
-		sc.fontsystem.font.setMapping({"word-changer": [0, 58]});
-		
+        this.options = new OptionManager(this);
 		injectStuff();
-		
     }
 
     main() {
+    	this.options.mainConstructor();
     	for (let word in this.words) {
-    		if (!sc.options.values["word-changer-info-"+word]) {
-    			sc.options.values["word-changer-info-"+word] = word;
-    		}
-    		this.words[word].active = sc.options.values["word-changer-toggle-"+word];
-    		let replacement = sc.options.values["word-changer-info-"+word] || word;
-			this.initReplacement(word, replacement);
+    		this.words[word].active = this.options.isEnabled(word);
+			this.initReplacement(word, this.options.getWord(word));
     	}
 	    this.updateRegex();
-
-		ig.lang.labels.sc.gui.menu.option["word-changer"] = "Words";
-
-    	sc.Model.addObserver(sc.options, {
-    		modelChanged: function() {
-    			var words = script.words;
-    			for (let word in words) {
-    				let option = sc.options.values["word-changer-toggle-"+word];
-    				if (option && !words[word].active) {
-    					words[word].active = true;
-    					if (sc.menu.directMenu === 8) { // if in menu
-    						getReplacement(word, words[word].replacement, words);
-    						script.updateRegex();
-    					}
-    				} else if (!option && words[word].active) {
-    					words[word].active = false;
-    					script.updateRegex();
-    				}
-    			}
-    		}
-    	});
     }
 
     updateRegex() {
@@ -105,30 +59,7 @@ export default class Script extends Plugin {
     	if (this.words[original].stretchable) {
     		this.words[original].replacementParts = rpl.splitReplacement(replacement);
     	}
-
-    	let toggletext = 'Replace "' + original + '"';
-    	let infotext = 'Current replacement for "' + original + '": ' + replacement;
-
-    	if (original != "lea") {
-    		ig.lang.labels.sc.gui.options['word-changer-toggle-' + original] = {
-    			name: toggletext,
-    			description: "Tick to replace this word with another."
-    		};
-
-    		ig.lang.labels.sc.gui.options['word-changer-info-' + original] = {
-    			description: infotext
-    		};
-    	} else {
-    		ig.lang.labels.sc.gui.options['word-changer-toggle-lea'] = {
-    			name: "Replace character name",
-    			description: "Tick to change the main character's name."
-    		};
-
-    		ig.lang.labels.sc.gui.options['word-changer-info-lea'] = {
-    			description: "Current name: " + replacement + ". This is used by the character as well as others."
-    		};
-
-    	}
+    	this.options.initOption(original, replacement);
     	manuallyReplaceLea();
     }
 
@@ -137,24 +68,7 @@ export default class Script extends Plugin {
     	if (this.words[original].stretchable) {
     		this.words[original].replacementParts = rpl.splitReplacement(replacement);
     	}
-    	var infotext;
-    	if (original != "lea") {
-    		infotext = 'Current replacement for "' + original + '": ' + replacement;
-        } else {
-        	infotext = "Current name: " + replacement + ". This is used by the character as well as others.";
-        }
-        ig.lang.labels.sc.gui.options['word-changer-info-' + original].description = infotext;
-
-    	sc.options.values["word-changer-info-" + original] = replacement;
-    	var options = sc.menu.guiReference.submenus.options.listBox.rows;
-    	for (let ind in options) {
-    		// The code below relies on the info box being directly above the toggle option.
-    		// This has been the only way I've found to find the correct info box.
-    		if (options[ind].optionName === "word-changer-toggle-" + original) {
-                options[ind-1].text.setText(infotext);
-                break;
-    		}
-    	}
+    	this.options.updateOption(original, replacement);
     	manuallyReplaceLea();
     }
 }
@@ -183,7 +97,6 @@ function injectStuff() {
 	});
 	ig.EVENT_STEP.SHOW_MSG.inject({
 		start: function() {
-			console.log(this);
 			replaceLabel(this.message, this.person === "main.lea");
 			this.parent();
 		}
@@ -267,36 +180,8 @@ function replaceLabel(label, isLea) {
 	label.value = ig.LangLabel.getText(label.data);
 }
 
-function getReplacement(original, prevReplacement) {
-	if(window.ig && window.ig.system){
-		// I've chosen the gamecodeMessage overlay because it's in the format I want
-	    var overlay = ig.dom.html('<div class="gameOverlayBox gamecodeMessage" ><h3>Enter replacement for "' + original + '"</h3></div>');
-	    var form = ig.dom.html('<form><input type="text" name="replacement" value="' + prevReplacement + '" /><input type="submit" name="send" value="Submit" /><form>');
-	    overlay.append(form);
-	    form.submit(function(){
-	        let newReplacement = form[0].replacement.value.toLowerCase() || prevReplacement;
-	        script.updateReplacement(original, newReplacement);
-	        ig.system.regainFocus();
-	        return false;
-	    });
-
-	    $(document.body).append(overlay);
-	    window.setTimeout(function(){
-	        overlay.addClass("shown");
-	    }, 20);
-	    ig.system.setFocusLost();
-
-	    var close = function(){
-	        overlay.remove();
-	    };
-	    ig.system.addFocusListener(close);
-	    form.find("input[type=text]").focus();
-	}
-}
-
 function manuallyReplaceLea() {
-	var capitalized = script.words.lea.replacement;
-	capitalized = capitalized[0].toUpperCase() + capitalized.substring(1);
+	var capitalized = script.words.lea.replacement.replace(/(\b[a-z])/g, (match, letter) => letter.toUpperCase());
 	sc.model.leaConfig.character.data.name.en_US = capitalized;
 	ig.database.data.lore.lea.title.en_US = capitalized;
 	ig.database.data.achievements["landmarks-total-04"].name.en_US = `${capitalized} the Explorer`;
