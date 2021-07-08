@@ -11,17 +11,6 @@ export default class Script extends Plugin {
         this.mods = mods;
         this.regex = null; // Initialized after options are loaded
         this.words = null; // Initialized in async prestart
-        this.optionsLoaded = false;
-        /*
-        I need to know some options to decide how to change messages, and
-        it just so happens that some messages are loaded before the options.
-        These messages are pushed into this queue and are initialized
-        after the options have been loaded.
-        The initialization being late doesn't seem to pose a problem for messages.
-        An alternative to this approach would be to save the options in some config file
-        in the mod folder but I decided the first approach would be less problematic.
-        */
-        this.messageQueue = [];
     }
 
     async prestart() {
@@ -68,11 +57,6 @@ export default class Script extends Plugin {
 			this.initReplacement(word, replacement);
     	}
 	    this.updateRegex();
-	    this.optionsLoaded = true;
-	    for (let arr of this.messageQueue) {
-	    	dialogueInit(arr[0], arr[1]); // initializes the messages
-	    }
-	    this.messageQueue = null;
 
 		ig.lang.labels.sc.gui.menu.option["word-changer"] = "Words";
 
@@ -197,24 +181,33 @@ function injectStuff() {
 			this.parent(a);
 		}
 	});
-	ig.EVENT_STEP.SHOW_MSG.inject({init: dialogueInit});
-	ig.EVENT_STEP.SHOW_SIDE_MSG.inject({init: dialogueInit});
+	ig.EVENT_STEP.SHOW_MSG.inject({
+		start: function() {
+			console.log(this);
+			replaceLabel(this.message, this.person === "main.lea");
+			this.parent();
+		}
+	});
+	ig.EVENT_STEP.SHOW_SIDE_MSG.inject({
+		start: function() {
+			replaceLabel(this.message, this.person === "main.lea");
+			this.parent();
+		}
+	});
 	ig.EVENT_STEP.SHOW_GET_MSG.inject({
-		init: function(a) {
-			if (a.msgType === "WORD" && a.object.en_US) {
-				replace(a.object.en_US);
+		start: function(a) {
+			if (this.msgType === "WORD" && this.text) {
+				this.text = replace(this.text);
 			}
 			this.parent(a);
 		}
 	});
 	ig.EVENT_STEP.SHOW_CHOICE.inject({
-		init: function(a) {
-			for (let option of a.options) {
-				if (option.label.en_US) {
-					option.label.en_US = replace(option.label.en_US);
-				}
+		start: function() {
+			for (let option of this.options) {
+				replaceLabel(option.label);
 			}
-			this.parent(a);
+			this.parent();
 		}
 	});
 }
@@ -239,29 +232,36 @@ function replace(string, leaOnly) {
 			(match) => rpl.replacer(match, words)) + '\0';
 }
 
-function dialogueInit(a, parent) {
-	if (!a.message || !a.message.en_US) {
-		return this.parent(a);
-	}
-	if (!parent) {
-		parent = this.parent.bind(this);
-	}
-	if (!script.optionsLoaded) {
-		script.messageQueue.push([a, parent]);
+function replaceLabel(label, isLea) {
+	var en_US_exists;
+	var message;
+	if (label.data && typeof label.data.en_US === "string") {
+		en_US_exists = true;
+		message = label.data.en_US;
+	} else if (typeof label.data === "string") {
+		en_US_exists = false;
+		message = label.data;
+	} else {
+		console.log("(Word Changer) Label with unexpected format:");
+		console.log(label);
 		return;
 	}
-	var hiCount = null;
-	if (a.person.person === "main.lea") {
-		let hiMatches = a.message.en_US.match(/hi[.!?]/gi);
-		hiCount = hiMatches ? hiMatches.length : 0;
-		a.message.en_US = replace(a.message.en_US);
+
+	var newMessage;
+	if (isLea) {
+		newMessage = replace(message);
 	} else if (script.words.lea.active) {
-		a.message.en_US = replace(a.message.en_US, true);
+		newMessage = replace(message, true);
+	} else {
+		newMessage = message;
 	}
-	parent(a);
-	if (hiCount !== null) {
-		a.hiCount = hiCount;
+
+	if (en_US_exists) {
+		label.data.en_US = newMessage;
+	} else {
+		label.data = newMessage;
 	}
+	label.value = ig.LangLabel.getText(label.data);
 }
 
 function getReplacement(original, prevReplacement) {
