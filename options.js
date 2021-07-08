@@ -48,6 +48,7 @@ export default class OptionManager {
     				} else if (!options.isEnabled(word) && words[word].active) {
     					words[word].active = false;
     					script.updateRegex();
+    					script.manuallyReplaceLea();
     				}
     			}
     		}

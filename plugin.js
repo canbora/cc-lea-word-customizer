@@ -60,7 +60,7 @@ export default class Script extends Plugin {
     		this.words[original].replacementParts = rpl.splitReplacement(replacement);
     	}
     	this.options.initOption(original, replacement);
-    	manuallyReplaceLea();
+    	this.manuallyReplaceLea();
     }
 
     updateReplacement(original, replacement) {
@@ -69,8 +69,21 @@ export default class Script extends Plugin {
     		this.words[original].replacementParts = rpl.splitReplacement(replacement);
     	}
     	this.options.updateOption(original, replacement);
-    	manuallyReplaceLea();
+    	this.manuallyReplaceLea();
     }
+
+    manuallyReplaceLea() {
+		var capitalized = replace("Lea");
+		sc.model.leaConfig.character.data.name.en_US = capitalized;
+		ig.database.data.lore.lea.title.en_US = capitalized;
+		ig.database.data.achievements["landmarks-total-04"].name.en_US = `${capitalized} the Explorer`;
+		ig.database.data.areas["cargo-ship"].landmarks.teleporter.description.en_US = `At the Cargo Hold where ${capitalized} started her journey.`;
+		ig.lang.labels.sc.gui.menu.stats.keys.yawns = `Total Number of Times ${capitalized} was bored`;
+		ig.lang.labels.sc.gui.menu.stats.keys.hiCount = `Total Number of Times ${capitalized} said "${script.words.hi.replacement}"`;
+		ig.lang.labels.sc.gui.menu["help-texts"].map.pages[1].content[2] = `Selecting yes closes the menu and teleports ${capitalized} to the location of the landmark`;
+		ig.lang.labels.sc.gui.menu["help-texts"].lore.pages[1].content[3] = `I added some extra code here for you, ${capitalized}. Next to the in-game categories I added one for your progress and one for characters.`;
+	}
+
 }
 
 function injectStuff() {
@@ -178,16 +191,4 @@ function replaceLabel(label, isLea) {
 		label.data = newMessage;
 	}
 	label.value = ig.LangLabel.getText(label.data);
-}
-
-function manuallyReplaceLea() {
-	var capitalized = script.words.lea.replacement.replace(/(\b[a-z])/g, (match, letter) => letter.toUpperCase());
-	sc.model.leaConfig.character.data.name.en_US = capitalized;
-	ig.database.data.lore.lea.title.en_US = capitalized;
-	ig.database.data.achievements["landmarks-total-04"].name.en_US = `${capitalized} the Explorer`;
-	ig.database.data.areas["cargo-ship"].landmarks.teleporter.description.en_US = `At the Cargo Hold where ${capitalized} started her journey.`;
-	ig.lang.labels.sc.gui.menu.stats.keys.yawns = `Total Number of Times ${capitalized} was bored`;
-	ig.lang.labels.sc.gui.menu.stats.keys.hiCount = `Total Number of Times ${capitalized} said "${script.words.hi.replacement}"`;
-	ig.lang.labels.sc.gui.menu["help-texts"].map.pages[1].content[2] = `Selecting yes closes the menu and teleports ${capitalized} to the location of the landmark`;
-	ig.lang.labels.sc.gui.menu["help-texts"].lore.pages[1].content[3] = `I added some extra code here for you, ${capitalized}. Next to the in-game categories I added one for your progress and one for characters.`;
 }
