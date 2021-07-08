@@ -16,15 +16,15 @@
 		"stretchable": false
 	},
 	"why": {
-		"string": "why+",
+		"stretchIndex": 2,
 		"replacement": "why",
-		"replacementParts": ["wh", "y", ""],
+		"newStretchIndex": 2,
 		"stretchable": true
 	},
 	"wait": {
-		"string": "wa+it",
+		"stretchIndex": 1,
 		"replacement": "wait",
-		"replacementParts": ["w", "a", "it"],
+		"newStretchIndex": 1,
 		"stretchable": true
 	},
 	"sorry": {
@@ -40,9 +40,9 @@
 		"stretchable": false
 	},
 	"what": {
-		"string": "wha+t",
+		"stretchIndex": 2,
 	   	"replacement": "what",
-		"replacementParts": ["wh", "a", "t"],
+		"newStretchIndex": 2,
 		"stretchable": true
 	},
 	"where": {

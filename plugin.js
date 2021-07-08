@@ -17,8 +17,14 @@ export default class Script extends Plugin {
     async prestart() {
         this.words = await fetch("/assets/mods/Word Changer/words.json").then(res=>res.json());
         for (let word in this.words) {
-        	if (this.words[word].stretchable) {
-        		this.words[word].regex = new RegExp("^" + this.words[word].string + "$", "i");
+        	let info = this.words[word];
+        	if (info.stretchable) {
+        		let ind = info.stretchIndex+1;
+        		let repl = info.replacement;
+        		let ind2 = info.newStretchIndex+1;
+        		info.regexString = word.substr(0, ind) + "+" + word.substr(ind);
+        		info.regex = new RegExp("^" + info.regexString + "$", "i");
+        		info.replacementParts = [repl.substr(0, ind2), repl.charAt(ind2), repl.substr(ind2+1)];
         	}
         }
         this.options = new OptionManager(this);
@@ -43,7 +49,7 @@ export default class Script extends Plugin {
     		if (!this.words[word].stretchable) {
     			result += word + "|";
     		} else {
-    			result += this.words[word].string + "|";
+    			result += this.words[word].regexString + "|";
     		}
     	}
     	if (result === "(?:") {
