@@ -128,8 +128,8 @@ export default class Script extends Plugin {
     			description: "Current name: " + replacement + ". This is used by the character as well as others."
     		};
 
-    		manuallyReplaceLea();
     	}
+    	manuallyReplaceLea();
     }
 
     updateReplacement(original, replacement) {
@@ -142,7 +142,6 @@ export default class Script extends Plugin {
     		infotext = 'Current replacement for "' + original + '": ' + replacement;
         } else {
         	infotext = "Current name: " + replacement + ". This is used by the character as well as others.";
-        	manuallyReplaceLea();
         }
         ig.lang.labels.sc.gui.options['word-changer-info-' + original].description = infotext;
 
@@ -156,6 +155,7 @@ export default class Script extends Plugin {
                 break;
     		}
     	}
+    	manuallyReplaceLea();
     }
 }
 
@@ -222,6 +222,9 @@ function replace(string, leaOnly) {
 	}
 	var regex, words;
 	if (leaOnly) {
+		if (!script.words.lea.active) {
+			return string;
+		}
 		regex = /\blea\b/gi;
 		words = {lea: script.words.lea};
 	} else {
