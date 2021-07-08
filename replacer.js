@@ -10,9 +10,9 @@ function lastVowelIndex(string) {
 	return string.length - 1;
 }
 
-export function splitReplacement(string) {
-	var i = lastVowelIndex(string);
-	return [string.substring(0, i), string.charAt(i), string.substring(i+1)];
+export function splitReplacement(string, index) {
+	if (!index) index = lastVowelIndex(string);
+	return [string.substring(0, index), string.charAt(index), string.substring(index+1)];
 }
 
 export function replacer(match, wordList) {

@@ -1,0 +1,61 @@
+{
+	"_comment1": "If useOptions is true, the replacement words should be entered in the in-game options.",
+	"_comment2": "useOptions can be set to false to disable the mods in-game options and instead accept the replacement words from here.",
+	"useOptions": true,
+	"words": {
+		"lea": {
+			"replacement": "lea",
+			"stretchable": false
+		},
+		"hi": {
+			"replacement": "hi",
+			"stretchable": false
+		},
+		"bye": {
+			"replacement": "bye",
+			"stretchable": false
+		},
+		"how": {
+			"replacement": "how",
+			"stretchable": false
+		},
+		"why": {
+			"stretchIndex": 2,
+			"replacement": "why",
+			"newStretchIndex": 2,
+			"stretchable": true
+		},
+		"wait": {
+			"stretchIndex": 1,
+			"replacement": "wait",
+			"newStretchIndex": 1,
+			"stretchable": true
+		},
+		"sorry": {
+			"replacement": "sorry",
+			"stretchable": false
+		},
+		"meet": {
+			"replacement": "meet",
+			"stretchable": false
+		},
+		"thanks": {
+			"replacement": "thanks",
+			"stretchable": false
+		},
+		"what": {
+			"stretchIndex": 2,
+			"replacement": "what",
+			"newStretchIndex": 2,
+			"stretchable": true
+		},
+		"where": {
+			"replacement": "where",
+			"stretchable": false
+		},
+		"who": {
+			"replacement": "who",
+			"stretchable": false
+		}
+	}
+}

@@ -24,12 +24,25 @@ export default class OptionManager {
 	    	};
 		}
 		sc.fontsystem.font.setMapping({"word-changer": [0, 58]});
+
+		sc.OptionsTabBox.inject({
+			init: function(b) {
+				this.parent(b);
+				var tabNum = 0;
+				for (let ind in this.tabs) {
+					if (this.tabs[ind]) {
+						tabNum++;
+					}
+				}
+				this.tabs["word-changer"] = this._createTabButton("word-changer", tabNum, sc.OPTION_CATEGORY.WORD_CHANGER);
+			}
+		});
 	}
 
 	mainConstructor() {
-		for (let word in this.words) {
-    		if (!this.options.getWord(word)) {
-    			this.options.setWord(word, word);
+		for (let word in this.script.words) {
+    		if (!this.getWord(word)) {
+    			this.setWord(word, word);
     		}
     	}
 		ig.lang.labels.sc.gui.menu.option["word-changer"] = "Words";
@@ -142,5 +155,4 @@ export default class OptionManager {
 		    form.find("input[type=text]").focus();
 		}
 	}
-
 }
