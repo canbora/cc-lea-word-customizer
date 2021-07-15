@@ -15,9 +15,14 @@ export default class Script extends Plugin {
     }
 
     async prestart() {
+    	const fs = require("fs");
+    	var dlcEnabled = fs.existsSync("assets/extension/post-game");
         this.words = await fetch("/assets/mods/Word Changer/words.json").then(res=>res.json());
         for (let word in this.words) {
         	let info = this.words[word];
+        	if (info.dlc && !dlcEnabled) {
+        		delete this.words[word];
+        	}
         	if (info.stretchable) {
         		let ind = info.stretchIndex+1;
         		info.regexString = word.substr(0, ind) + "+" + word.substr(ind);

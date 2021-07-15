@@ -1,41 +1,53 @@
 {
 	"lea": {
-		"stretchable": false
+		"stretchable": false,
+		"dlc": false
 	},
 	"hi": {
-		"stretchable": false
+		"stretchable": false,
+		"dlc": false
 	},
 	"bye": {
-		"stretchable": false
+		"stretchable": false,
+		"dlc": false
 	},
 	"how": {
-		"stretchable": false
+		"stretchable": false,
+		"dlc": false
 	},
 	"why": {
 		"stretchIndex": 2,
-		"stretchable": true
+		"stretchable": true,
+		"dlc": false
 	},
 	"wait": {
 		"stretchIndex": 1,
-		"stretchable": true
+		"stretchable": true,
+		"dlc": false
 	},
 	"sorry": {
-		"stretchable": false
+		"stretchable": false,
+		"dlc": false
 	},
 	"meet": {
-		"stretchable": false
+		"stretchable": false,
+		"dlc": false
 	},
 	"thanks": {
-		"stretchable": false
+		"stretchable": false,
+		"dlc": false
 	},
 	"what": {
 		"stretchIndex": 2,
-		"stretchable": true
+		"stretchable": true,
+		"dlc": true
 	},
 	"where": {
-		"stretchable": false
+		"stretchable": false,
+		"dlc": true
 	},
 	"who": {
-		"stretchable": false
+		"stretchable": false,
+		"dlc": true
 	}
 }
