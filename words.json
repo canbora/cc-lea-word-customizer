@@ -1,0 +1,41 @@
+{
+	"lea": {
+		"stretchable": false
+	},
+	"hi": {
+		"stretchable": false
+	},
+	"bye": {
+		"stretchable": false
+	},
+	"how": {
+		"stretchable": false
+	},
+	"why": {
+		"stretchIndex": 2,
+		"stretchable": true
+	},
+	"wait": {
+		"stretchIndex": 1,
+		"stretchable": true
+	},
+	"sorry": {
+		"stretchable": false
+	},
+	"meet": {
+		"stretchable": false
+	},
+	"thanks": {
+		"stretchable": false
+	},
+	"what": {
+		"stretchIndex": 2,
+		"stretchable": true
+	},
+	"where": {
+		"stretchable": false
+	},
+	"who": {
+		"stretchable": false
+	}
+}

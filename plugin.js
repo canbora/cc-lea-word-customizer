@@ -15,38 +15,25 @@ export default class Script extends Plugin {
     }
 
     async prestart() {
-        let json = await fetch("/assets/mods/Word Changer/config.json").then(res=>res.json());
-        this.words = json.words;
+        this.words = await fetch("/assets/mods/Word Changer/words.json").then(res=>res.json());
         for (let word in this.words) {
         	let info = this.words[word];
         	if (info.stretchable) {
         		let ind = info.stretchIndex+1;
-        		let repl = info.replacement.toLowerCase();
-        		let ind2 = info.newStretchIndex+1;
         		info.regexString = word.substr(0, ind) + "+" + word.substr(ind);
         		info.regex = new RegExp("^" + info.regexString + "$", "i");
-        		info.replacementParts = [repl.substr(0, ind2), repl.charAt(ind2), repl.substr(ind2+1)];
         	}
         }
-        if (json.useOptions) {
-        	this.options = new OptionManager(this);
-        }
+        this.options = new OptionManager(this);
 		injectStuff();
     }
 
     main() {
-    	if (this.options) {
-	    	this.options.mainConstructor();
-	    	for (let word in this.words) {
-	    		this.words[word].active = this.options.isEnabled(word);
-				this.initReplacement(word, this.options.getWord(word), false);
-	    	}
-	    } else {
-	    	for (let word in this.words) {
-	    		this.words[word].active = true;
-				this.initReplacement(word, this.words[word].replacement, true);
-	    	}
-	    }
+    	this.options.mainConstructor();
+    	for (let word in this.words) {
+    		this.words[word].active = this.options.isEnabled(word);
+			this.initReplacement(word, this.options.getWord(word), false);
+    	}
 	    this.updateRegex();
 	    this.manuallyReplaceLea();
     }
@@ -72,16 +59,11 @@ export default class Script extends Plugin {
     }
 
     initReplacement(original, replacement, useGivenIndex) {
-    	if (this.options) {
-    		this.words[original].replacement = replacement;
-    	}
+    	this.words[original].replacement = replacement;
     	if (this.words[original].stretchable) {
-    		let index = useGivenIndex ? this.words[original].newStretchIndex : null;
-    		this.words[original].replacementParts = rpl.splitReplacement(replacement, index);
+    		this.words[original].replacementParts = rpl.splitReplacement(replacement);
     	}
-    	if (this.options) {
-    		this.options.initOption(original, replacement);
-    	}
+    	this.options.initOption(original, replacement);
     }
 
     updateReplacement(original, replacement) {
@@ -89,11 +71,7 @@ export default class Script extends Plugin {
     	if (this.words[original].stretchable) {
     		this.words[original].replacementParts = rpl.splitReplacement(replacement);
     	}
-    	if (this.options) {
-    		this.options.updateOption(original, replacement);
-    	} else {
-    		console.log("(Word Changer) Replacement updated while options were disabled. Something is off...");
-    	}
+    	this.options.updateOption(original, replacement);
     	if (original === "lea" || original === "hi") {
     		this.manuallyReplaceLea();
     	}
@@ -125,30 +103,38 @@ function injectStuff() {
 	});
 	ig.EVENT_STEP.SHOW_MSG.inject({
 		start: function() {
+			var original = this.message;
 			replaceLabel(this.message, this.person === "main.lea");
 			this.parent();
+			this.message = original;
 		}
 	});
 	ig.EVENT_STEP.SHOW_SIDE_MSG.inject({
 		start: function() {
+			var original = this.message;
 			replaceLabel(this.message, this.person === "main.lea");
 			this.parent();
+			this.message = original;
 		}
 	});
 	ig.EVENT_STEP.SHOW_GET_MSG.inject({
 		start: function(a) {
+			var original = this.text;
 			if (this.msgType === "WORD" && this.text) {
 				this.text = replace(this.text);
 			}
 			this.parent(a);
+			this.text = original;
 		}
 	});
 	ig.EVENT_STEP.SHOW_CHOICE.inject({
 		start: function() {
+			var original = option.label;
 			for (let option of this.options) {
 				replaceLabel(option.label);
 			}
 			this.parent();
+			option.label = original;
 		}
 	});
 }
