@@ -6,18 +6,18 @@ var script = null;
 
 export default class Script extends Plugin {
 
-    constructor(mods) {
+    constructor(modInfo) {
         super();
         script = this;
-        this.mods = mods;
+        this.modInfo = modInfo;
         this.regex = null; // Initialized after options are loaded
-        this.words = null; // Initialized in async prestart
+        this.words = null; // Initialized in prestart
     }
 
-    async prestart() {
+    prestart() {
     	const fs = require("fs");
     	var dlcEnabled = fs.existsSync("assets/extension/post-game");
-        this.words = await fetch("/assets/mods/Word Changer/words.json").then(res=>res.json());
+    	this.words = JSON.parse(fs.readFileSync("./"+this.modInfo.baseDirectory+"words.json"));
         for (let word in this.words) {
         	let info = this.words[word];
         	if (info.dlc && !dlcEnabled) {
