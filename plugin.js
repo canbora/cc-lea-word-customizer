@@ -134,12 +134,12 @@ function injectStuff() {
 	});
 	ig.EVENT_STEP.SHOW_CHOICE.inject({
 		start: function() {
-			var original = option.label;
+			var original = this.options;
 			for (let option of this.options) {
 				replaceLabel(option.label);
 			}
 			this.parent();
-			option.label = original;
+			this.options = original;
 		}
 	});
 }
