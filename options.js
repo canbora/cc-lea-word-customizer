@@ -11,19 +11,19 @@ export default class OptionManager {
 		sc.OPTION_CATEGORY.WORD_CHANGER = maxId + 1;
 
 		for (let word in script.words) {
-	    	sc.OPTIONS_DEFINITION['word-changer-info-' + word] = {
+	    	sc.OPTIONS_DEFINITION['lwc-info-' + word] = {
 		        cat: sc.OPTION_CATEGORY.WORD_CHANGER,
 		        type: "INFO",
-		        data: "options.word-changer-info-" + word + ".description"
+		        data: "options.lwc-info-" + word + ".description"
 		    };
-			sc.OPTIONS_DEFINITION['word-changer-toggle-' + word] = {
+			sc.OPTIONS_DEFINITION['lwc-toggle-' + word] = {
 				cat: sc.OPTION_CATEGORY.WORD_CHANGER,
 				type: 'CHECKBOX',
 				init: false,
 				restart: false,
 	    	};
 		}
-		sc.fontsystem.font.setMapping({"word-changer": [0, 58]});
+		sc.fontsystem.font.setMapping({"lwc": [0, 58]});
 
 		sc.OptionsTabBox.inject({
 			init: function(b) {
@@ -34,7 +34,7 @@ export default class OptionManager {
 						tabNum++;
 					}
 				}
-				this.tabs["word-changer"] = this._createTabButton("word-changer", tabNum, sc.OPTION_CATEGORY.WORD_CHANGER);
+				this.tabs["lwc"] = this._createTabButton("lwc", tabNum, sc.OPTION_CATEGORY.WORD_CHANGER);
 			}
 		});
 	}
@@ -45,7 +45,7 @@ export default class OptionManager {
     			this.setWord(word, word);
     		}
     	}
-		ig.lang.labels.sc.gui.menu.option["word-changer"] = "Words";
+		ig.lang.labels.sc.gui.menu.option["lwc"] = "Words";
 		var script = this.script;
 		var options = this;
     	sc.Model.addObserver(sc.options, {
@@ -69,15 +69,15 @@ export default class OptionManager {
 	}
 
 	getWord(word) {
-		return sc.options.values["word-changer-info-"+word];
+		return sc.options.values["lwc-info-"+word];
 	}
 
 	setWord(original, replacement) {
-		sc.options.values["word-changer-info-"+original] = replacement;
+		sc.options.values["lwc-info-"+original] = replacement;
 	}
 
 	isEnabled(word) {
-		return sc.options.values["word-changer-toggle-"+word];
+		return sc.options.values["lwc-toggle-"+word];
 	}
 
 	initOption(original, replacement) {
@@ -85,21 +85,21 @@ export default class OptionManager {
     	let infotext = 'Current replacement for "' + original + '": ' + replacement;
 
     	if (original != "lea") {
-    		ig.lang.labels.sc.gui.options['word-changer-toggle-' + original] = {
+    		ig.lang.labels.sc.gui.options['lwc-toggle-' + original] = {
     			name: toggletext,
     			description: "Tick to replace this word with another."
     		};
 
-    		ig.lang.labels.sc.gui.options['word-changer-info-' + original] = {
+    		ig.lang.labels.sc.gui.options['lwc-info-' + original] = {
     			description: infotext
     		};
     	} else {
-    		ig.lang.labels.sc.gui.options['word-changer-toggle-lea'] = {
+    		ig.lang.labels.sc.gui.options['lwc-toggle-lea'] = {
     			name: "Replace character name",
     			description: "Tick to change the main character's name."
     		};
 
-    		ig.lang.labels.sc.gui.options['word-changer-info-lea'] = {
+    		ig.lang.labels.sc.gui.options['lwc-info-lea'] = {
     			description: "Current name: " + replacement + ". This is used by the character as well as others."
     		};
 
@@ -113,13 +113,13 @@ export default class OptionManager {
         } else {
         	infotext = "Current name: " + replacement + ". This is used by the character as well as others.";
         }
-        ig.lang.labels.sc.gui.options['word-changer-info-' + original].description = infotext;
+        ig.lang.labels.sc.gui.options['lwc-info-' + original].description = infotext;
 
 		var options = sc.menu.guiReference.submenus.options.listBox.rows;
     	for (let ind in options) {
     		// The code below relies on the info box being directly above the toggle option.
     		// This has been the only way I've found to find the correct info box.
-    		if (options[ind].optionName === "word-changer-toggle-" + original) {
+    		if (options[ind].optionName === "lwc-toggle-" + original) {
                 options[ind-1].text.setText(infotext);
                 break;
     		}

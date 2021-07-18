@@ -177,7 +177,7 @@ function replaceLabel(label, isLea) {
 		en_US_exists = false;
 		message = label.data;
 	} else {
-		console.log("(Word Changer) Label with unexpected format:");
+		console.log("(Lea Word Customizer) Label with unexpected format:");
 		console.log(label);
 		return;
 	}
