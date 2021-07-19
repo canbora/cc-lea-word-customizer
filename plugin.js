@@ -107,39 +107,43 @@ function injectStuff() {
 		}
 	});
 	ig.EVENT_STEP.SHOW_MSG.inject({
+		init: function(a) {
+			this.originalData = JSON.parse(JSON.stringify(a.message));
+			this.parent(a);
+		},
 		start: function() {
-			var original = this.message;
-			replaceLabel(this.message, this.person === "main.lea");
+			replaceLabel(this.message, this.originalData, this.person === "main.lea");
 			this.parent();
-			this.message = original;
 		}
 	});
 	ig.EVENT_STEP.SHOW_SIDE_MSG.inject({
+		init: function(a) {
+			this.originalData = JSON.parse(JSON.stringify(a.message));
+			this.parent(a);
+		},
 		start: function() {
-			var original = this.message;
-			replaceLabel(this.message, this.person === "main.lea");
+			replaceLabel(this.message, this.originalData, this.person === "main.lea");
 			this.parent();
-			this.message = original;
 		}
 	});
 	ig.EVENT_STEP.SHOW_GET_MSG.inject({
 		start: function(a) {
-			var original = this.text;
 			if (this.msgType === "WORD" && this.text) {
 				this.text = replace(this.text);
 			}
 			this.parent(a);
-			this.text = original;
 		}
 	});
 	ig.EVENT_STEP.SHOW_CHOICE.inject({
+		init: function(a) {
+			this.originalOptions = JSON.parse(JSON.stringify(a.options)) || [];
+			this.parent(a);
+		},
 		start: function() {
-			var original = this.options;
-			for (let option of this.options) {
-				replaceLabel(option.label);
+			for (let i = 0; i < this.options.length; i++) {
+				replaceLabel(this.options[i].label, this.originalOptions[i].label);
 			}
 			this.parent();
-			this.options = original;
 		}
 	});
 }
@@ -167,34 +171,33 @@ function replace(string, leaOnly) {
 			(match) => rpl.replacer(match, words)) + '\0';
 }
 
-function replaceLabel(label, isLea) {
+function replaceLabel(actualLabel, originalData, isLea) {
 	var en_US_exists;
-	var message;
-	if (label.data && typeof label.data.en_US === "string") {
+	var originalMsg;
+	if (originalData && typeof originalData.en_US === "string") {
 		en_US_exists = true;
-		message = label.data.en_US;
-	} else if (typeof label.data === "string") {
+		originalMsg = originalData.en_US;
+	} else if (typeof originalData === "string") {
 		en_US_exists = false;
-		message = label.data;
+		originalMsg = originalData;
 	} else {
-		console.log("(Lea Word Customizer) Label with unexpected format:");
-		console.log(label);
+		console.log("(Lea Word Customizer) Original data with unexpected format:");
+		console.log(originalData);
 		return;
 	}
-
-	var newMessage;
+	var replacement;
 	if (isLea) {
-		newMessage = replace(message);
+		replacement = replace(originalMsg);
 	} else if (script.words.lea.active) {
-		newMessage = replace(message, true);
+		replacement = replace(originalMsg, true);
 	} else {
-		newMessage = message;
+		replacement = originalMsg;
 	}
 
 	if (en_US_exists) {
-		label.data.en_US = newMessage;
+		actualLabel.data.en_US = replacement;
 	} else {
-		label.data = newMessage;
+		actualLabel.data = replacement;
 	}
-	label.value = ig.LangLabel.getText(label.data);
+	actualLabel.value = ig.LangLabel.getText(actualLabel.data);
 }
