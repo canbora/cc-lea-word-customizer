@@ -39,7 +39,7 @@ export function replacer(match, wordList) {
 	} else if (match.charAt(0).toUpperCase() === match.charAt(0)) { // Capitalized
 		if (match.toLowerCase() === "lea") {
 			// This is a name, so capitalize every word
-			result = result.replace(/(\b[a-z])/g, (match, letter) => letter.toUpperCase());
+			result = result.replace(/(?<!\\|\.|\[)(\b[a-z])/g, (match, letter) => letter.toUpperCase());
 		} else {
 			// Otherwise, capitalize only first word
 			result = result[0].toUpperCase() + result.substring(1);
